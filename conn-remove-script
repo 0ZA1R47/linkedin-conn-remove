@@ -1,0 +1,107 @@
+// LinkedIn Unfollow Script 2024 (Enhanced for Efficiency and Reliability)
+// Original by @Mighil, Enhanced by ChatGPT
+// Use at your own risk
+
+// Delay settings
+const minDelay = 10;
+let modalDelay = 500; 
+let unfollowDelay = 100; 
+let scrollDelay = 500; 
+let lastScrollHeight = 0;
+
+function waitForElement(selector, maxTimeMs) {
+  return new Promise((resolve) => {
+    const startTime = Date.now();
+    const interval = 100; 
+
+    const checkExist = setInterval(() => {
+      const element = document.querySelector(selector);
+      const elapsedTime = Date.now() - startTime;
+
+      if (element) {
+        clearInterval(checkExist);
+        resolve(element);
+      } else if (elapsedTime >= maxTimeMs) {
+        clearInterval(checkExist);
+        resolve(null);
+      }
+    }, interval);
+  });
+}
+
+async function unfollowUser() {
+  const followButtons = document.querySelectorAll(".artdeco-button__text");
+  const followingButtons = Array.from(followButtons).filter(button => button.innerText.trim() === "Following");
+
+  for (const button of followingButtons) {
+    button.click();
+    const success = await waitForModalAndUnfollow();
+    adjustDelays(success);
+  }
+
+  if (followingButtons.length === 0) {
+    checkNeedForScroll();
+  } else {
+    setTimeout(unfollowUser, unfollowDelay);
+  }
+}
+
+async function waitForModalAndUnfollow() {
+  const modal = await waitForElement(".artdeco-modal", modalDelay);
+
+  if (modal) {
+    const unfollowButton = modal.querySelector(".artdeco-modal__actionbar .artdeco-button--primary");
+    if (unfollowButton) {
+      unfollowButton.click();
+    }
+
+    const closeButton = modal.querySelector(".artdeco-modal__dismiss");
+    if (closeButton) {
+      closeButton.click();
+    }
+    return true;
+  }
+  return false;
+}
+
+function checkNeedForScroll() {
+  const currentScrollHeight = document.body.scrollHeight;
+  if (currentScrollHeight > lastScrollHeight) {
+    lastScrollHeight = currentScrollHeight;
+    scrollDown();
+  } else {
+    setTimeout(() => {
+      if (document.body.scrollHeight > lastScrollHeight) {
+        scrollDown();
+      } else {
+        unfollowUser();
+      }
+    }, scrollDelay);
+  }
+}
+
+function adjustDelays(success) {
+  const minModalDelay = 200, maxModalDelay = 1000;
+  const minUnfollowDelay = 50, maxUnfollowDelay = 500;
+  const minScrollDelay = 250, maxScrollDelay = 1500;
+
+  if (success) {
+    modalDelay = Math.max(modalDelay - 100, minModalDelay);
+    unfollowDelay = Math.max(unfollowDelay - 50, minUnfollowDelay);
+    scrollDelay = Math.max(scrollDelay - 100, minScrollDelay);
+  } else {
+    modalDelay = Math.min(modalDelay + 100, maxModalDelay);
+    unfollowDelay = Math.min(unfollowDelay + 50, maxUnfollowDelay);
+    scrollDelay = Math.min(scrollDelay + 100, maxScrollDelay);
+  }
+
+  console.log(`Adjusted Delays - Modal: ${modalDelay}, Unfollow: ${unfollowDelay}, Scroll: ${scrollDelay}`);
+}
+
+function scrollDown() {
+  window.scrollTo(0, document.body.scrollHeight);
+  setTimeout(unfollowUser, scrollDelay);
+}
+
+// Start the process
+scrollDown();

@@ -1,4 +1,5 @@
-# linkedin-conn-remove
-This repository contains a JS code to bulk remove LinkedIn connections.
+# linkedin bulk remove connection/followers script
 
-Run the script in browser console on the "Connections" page. 
+### Run the "conn-remove-script" code in browser console on the "Connections" page. 
+
+### Run the "Unfollow-script" code in browser console on the "Following" page.
